@@ -89,18 +89,21 @@ void manejadoraSomelier(int signal){
 
 	mozo = fork();
 
+	struct sigaction sMozo = {0};
+	sMozo.sa_handler=manejadoraMozo;
+
 	if(mozo==-1){
 
 		perror("error en la llamada al fork()");
 
 	}else if(mozo == 0){ // codigo del mozo
 
-		if(signal = SIGPIPE){
+		
 
-			printf("Voy a buscar ingredientes\n");
+		sigaction(SIGPIPE, &sMozo, NULL);
 
 
-		}	
+			
 		
 	}else //codigo del somelier
 
@@ -108,19 +111,29 @@ void manejadoraSomelier(int signal){
 
 			printf("Faltan ingredientes\n");
 
+			sleep(1);
+
 			kill(mozo,SIGPIPE);
 			
-			sleep(2);
+			
 
 		}else if(signal==SIGUSR2){
 
 			printf("Falta vino\n");
 
+				sleep(1);
+
+			kill(mozo,SIGPIPE);
+
 	}
 
 }
 
+void manejadoraMozo(int signal){
 
+	
+
+}
 
 int calculaAleatorios(int min, int max){
 	return rand() % (max-min+1) + min;
