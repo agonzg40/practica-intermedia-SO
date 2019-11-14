@@ -8,7 +8,8 @@
 
 
 int calculaAleatorios(int min, int max);
-void manejadoraSomelier(int sig); //Manejadora del somelier 
+void manejadoraSomelier(int sig); //Manejadora del somelier
+
 
 
 int main(int argc, char *argv[]){
@@ -41,7 +42,6 @@ int main(int argc, char *argv[]){
 		somelier1.sa_handler = manejadoraSomelier;
 		
 		sigaction(SIGUSR1, &somelier1, NULL);
-
 		sigaction(SIGUSR2, &somelier1, NULL);
 
 		for(;;) pause();
@@ -83,17 +83,44 @@ int main(int argc, char *argv[]){
 
 void manejadoraSomelier(int signal){
 	
-	if(signal==SIGUSR1){
+	
 
-		printf("Faltan ingredientes\n");
+	pid_t mozo;
 
-	}else if(signal==SIGUSR2){
+	mozo = fork();
 
-		printf("Falta vino\n");
+	if(mozo==-1){
+
+		perror("error en la llamada al fork()");
+
+	}else if(mozo == 0){ // codigo del mozo
+
+		if(signal = SIGPIPE){
+
+			printf("Voy a buscar ingredientes\n");
+
+
+		}	
+		
+	}else //codigo del somelier
+
+		if(signal==SIGUSR1){
+
+			printf("Faltan ingredientes\n");
+
+			kill(mozo,SIGPIPE);
+			
+			sleep(2);
+
+		}else if(signal==SIGUSR2){
+
+			printf("Falta vino\n");
 
 	}
 
 }
+
+
 
 int calculaAleatorios(int min, int max){
 	return rand() % (max-min+1) + min;
