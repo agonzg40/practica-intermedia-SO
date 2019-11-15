@@ -126,15 +126,18 @@ int main(int argc, char *argv[]){
 		}else if(variable==2){
 
 			printf("Chef: Me faltan ingredientes\n");
-
-			kill(pinches,SIGUSR1);
-
+		
+			for(int i=0; i<posicion; i++){
+				kill(pinches[i],SIGUSR1);
+			}
 		}else{
 
 			printf("Chef: No falta nada\n");
 
-			kill(pinches,SIGUSR1);
+			for(int i=0; i<posicion; i++){
 
+				kill(pinches[i],SIGUSR1);
+			}
 		}
 
 		
@@ -241,9 +244,9 @@ void manejadoraMozo(int signal){
 
 void manejadoraPinche(int signal){
 
-	int suma = suma + calculaAleatorios(0,1);
+	int suma = calculaAleatorios(0,1);
 
-	printf("as%d\n",suma);
+	printf("%d\n",suma);
 
 }
 
