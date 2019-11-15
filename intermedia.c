@@ -17,7 +17,7 @@ int main(int argc, char *argv[]){
 
 	int encontrado;
 
-	struct sigaction somelier1;
+	struct sigaction somelier1={0};
 
 	srand (time(NULL));
 
@@ -25,7 +25,7 @@ int main(int argc, char *argv[]){
 	
 	
 
-	pid_t chef, somelier, jefeDeSala, pinche;
+	pid_t chef, somelier, jefeDeSala, pinches;
 
 	chef = getpid();
 
@@ -45,6 +45,8 @@ int main(int argc, char *argv[]){
 
 		for(;;) pause();
 
+		
+
 	}
 
 	jefeDeSala = fork();
@@ -56,6 +58,20 @@ int main(int argc, char *argv[]){
 	}else if(jefeDeSala == 0){ //codigo del jefe de sala
 
 	}
+
+	for(int i=0; i<argv[1];i++){//creacion de tantos pinches como se diga
+
+		pinches[i]=fork();
+
+		if(pid[i]==0){
+		
+			
+
+		}	
+
+	}
+
+	
 
 	srand(getpid());
 
@@ -74,6 +90,32 @@ int main(int argc, char *argv[]){
 			kill(somelier, SIGUSR2);
 
 		}
+	
+		int encontrado;
+		int variable;
+
+		waitpid(somelier,&encontrado,0);
+		if(WIFEXITED(encontrado))
+		variable =WEXITSTATUS(encontrado);
+
+		printf("%d\n",variable);
+
+		if(variable==1){
+
+			printf("Chef: Falta vino no puedo abrir el restaurante\n");
+
+			
+			//aqui tengo que matar a todos los hijos
+	
+		}else if(variable==2){
+
+			printf("Chef: Me faltan ingredientes\n");
+
+		}else{
+
+			printf("Chef: No falta nada\n");
+
+		}
 
 		
 	}
@@ -88,7 +130,7 @@ void manejadoraSomelier(int signal){
 
 	mozo = fork();
 
-	struct sigaction sMozo;
+	struct sigaction sMozo = {0};
 	sMozo.sa_handler=manejadoraMozo;
 
 	if(mozo==-1){
@@ -97,33 +139,12 @@ void manejadoraSomelier(int signal){
 
 	}else if(mozo == 0){ // codigo del mozo
 
-		int variable;
+		
 
-		sigaction(SIGPIPE, &sMozo, NULL);
-
-
-		int encontrado;
-		wait(&encontrado); 
-
-		variable==WEXITSTATUS(encontrado);
-
-		printf("%d\n",variable);
-
-		if(encontrado == 0){
-
+		sigaction(SIGPIPE, &sMozo, NULL);		
 	
-
-		}else if(encontrado == 1){
-
 		
-		}else{
-
-			printf("No faltan ningun ingrediente\n");
-
-		}
-			
-		
-	}else //codigo del somelier
+	}else{ //codigo del somelier
 
 		if(signal==SIGUSR1){
 
@@ -143,11 +164,45 @@ void manejadoraSomelier(int signal){
 
 			kill(mozo,SIGPIPE);
 
+		}
+
+	int encontrado;
+	int variable;
+		wait(&encontrado); 
+		
+		variable=WEXITSTATUS(encontrado);
+
+		printf("%d\n",variable);
+
+		if(encontrado == 0){
+	
+			if(signal == SIGUSR1){
+
+				printf("Somelier: Faltan ingredientes\n");
+
+				exit(2);
+
+			}else if(signal == SIGUSR2){
+
+				printf("Somelier: Falta vino\n");
+	
+				exit(1);
+			}
+
+		}else{
+
+			printf("No falta nada\n");
+
+			exit(3);
+		}
+
 	}
 
 }
 
 void manejadoraMozo(int signal){
+
+	srand(getpid());
 
 	if(calculaAleatorios(0,1)==0){
 
