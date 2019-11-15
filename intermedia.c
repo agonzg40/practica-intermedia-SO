@@ -97,18 +97,17 @@ void manejadoraSomelier(int signal){
 
 	}else if(mozo == 0){ // codigo del mozo
 
-		
+		int variable;
 
 		sigaction(SIGPIPE, &sMozo, NULL);
 
-		sleep(2);
 
 		int encontrado;
 		wait(&encontrado); 
 
-		WEXITSTATUS(encontrado);
+		variable==WEXITSTATUS(encontrado);
 
-		printf("%d y %d\n", encontrado, WEXITSTATUS(encontrado));
+		printf("%d\n",variable);
 
 		if(encontrado == 0){
 
