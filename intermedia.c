@@ -10,6 +10,7 @@
 int calculaAleatorios(int min, int max);
 void manejadoraSomelier(int sig); //Manejadora del somelier
 void manejadoraMozo(int sig); //Manejadora del mozo
+void manejadoraPinche(int sig);//Manejadora de los pinches
 
 
 
@@ -18,14 +19,15 @@ int main(int argc, char *argv[]){
 	int encontrado;
 
 	struct sigaction somelier1={0};
+	struct sigaction mPinches={0};
 
 	srand (time(NULL));
 
 	printf("%d: Arrancando...\n",getpid()); //Este es el codigo del Chef
 	
-	
+	int posicion = atoi(argv[1]);
 
-	pid_t chef, somelier, jefeDeSala, pinches;
+	pid_t chef, somelier, jefeDeSala, pinches[posicion];
 
 	chef = getpid();
 
@@ -59,15 +61,29 @@ int main(int argc, char *argv[]){
 
 	}
 
-	for(int i=0; i<argv[1];i++){//creacion de tantos pinches como se diga
+	
+
+	for(int i=0; i<posicion;i++){//creacion de tantos pinches como se diga
 
 		pinches[i]=fork();
 
-		if(pid[i]==0){
-		
-			
+		int suma=0;
 
+		if(pinches[i]==-1){
+
+			perror("Error en la llamada al fork()");
+
+		}else if(pinches[i]==0){//codigo del pinche
+			
+			mPinches.sa_handler = manejadoraPinche;
+
+			sigaction(SIGUSR1, &mPinches, NULL);
+
+			for(;;) pause();
+			
 		}	
+
+		
 
 	}
 
@@ -111,9 +127,13 @@ int main(int argc, char *argv[]){
 
 			printf("Chef: Me faltan ingredientes\n");
 
+			kill(pinches,SIGUSR1);
+
 		}else{
 
 			printf("Chef: No falta nada\n");
+
+			kill(pinches,SIGUSR1);
 
 		}
 
@@ -218,6 +238,15 @@ void manejadoraMozo(int signal){
 	}
 
 }
+
+void manejadoraPinche(int signal){
+
+	int suma = suma + calculaAleatorios(0,1);
+
+	printf("as%d\n",suma);
+
+}
+
 
 int calculaAleatorios(int min, int max){
 	return rand() % (max-min+1) + min;
