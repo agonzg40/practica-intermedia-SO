@@ -11,6 +11,7 @@ int calculaAleatorios(int min, int max);
 void manejadoraSomelier(int sig); //Manejadora del somelier
 void manejadoraMozo(int sig); //Manejadora del mozo
 void manejadoraPinche(int sig);//Manejadora de los pinches
+void manejadoraJefeDeSala(int sig);//Manejadora del jefe de sala
 
 
 
@@ -20,6 +21,7 @@ int main(int argc, char *argv[]){
 
 	struct sigaction somelier1={0};
 	struct sigaction mPinches={0};
+	struct sigaction mJefeDeSala;
 
 	srand (time(NULL));
 
@@ -46,7 +48,8 @@ int main(int argc, char *argv[]){
 		sigaction(SIGUSR2, &somelier1, NULL);
 
 		for(;;) pause();
-
+		
+		//kill(somelier,SIGTERM);
 		
 
 	}
@@ -58,6 +61,14 @@ int main(int argc, char *argv[]){
 		perror("Error en la llamada al fork()");
 
 	}else if(jefeDeSala == 0){ //codigo del jefe de sala
+
+		mJefeDeSala.sa_handler=manejadoraJefeDeSala;
+
+		sigaction(SIGUSR1,&mJefeDeSala,NULL);
+
+		for(;;) pause();
+
+		//kill(jefeDeSala,SIGTERM);
 
 	}
 
@@ -80,6 +91,9 @@ int main(int argc, char *argv[]){
 			sigaction(SIGUSR1, &mPinches, NULL);
 
 			for(;;) pause();
+
+
+			//kill(pinches[i],SIGTERM);
 			
 		}	
 
@@ -99,9 +113,13 @@ int main(int argc, char *argv[]){
 		
 		if(calculaAleatorios(0, 1) == 0){
 
+			printf("Chef: Faltan ingredientes\n-----Avisando al somelier-----\n");
+
 			kill(somelier, SIGUSR1);
 
 		}else{
+
+			printf("Chef: Falta vino\n-----Avisando al somelier-----\n");
 
 			kill(somelier, SIGUSR2);
 
@@ -114,29 +132,26 @@ int main(int argc, char *argv[]){
 		if(WIFEXITED(encontrado))
 		variable =WEXITSTATUS(encontrado);
 
-		printf("%d\n",variable);
-
 		if(variable==1){
 
-			printf("Chef: Falta vino no puedo abrir el restaurante\n");
+			printf("Chef: Falta vino no puedo abrir el restaurante\n-----Cerrando el restaurante-----\n");
 			
 			//aqui tengo que matar a todos los hijos
 
 			kill(somelier,SIGTERM);
 			kill(jefeDeSala,SIGTERM);
-			kill(pinches,SIGTERM);
-			kill(mozo,SIGTERM);
+		
 	
 		}else if(variable==2){
 
-			printf("Chef: Me faltan ingredientes\n");
+			printf("Chef: Me faltan ingredientes\n-----Avisando a los pinches-----\n");
 		
 			for(int i=0; i<posicion; i++){
 				kill(pinches[i],SIGUSR1);
 			}
 		}else{
 
-			printf("Chef: No falta nada\n");
+			printf("Chef: No falta nada\n-----Avisando a los pinches-----\n");
 
 			for(int i=0; i<posicion; i++){
 
@@ -150,16 +165,51 @@ int main(int argc, char *argv[]){
 		for(int i=0; i<posicion;i++){
 			
 			waitpid(pinches[i],&devuelto,0);
-
-		
 			suma = suma + WEXITSTATUS(devuelto);
-
-			printf("%d\n",suma);
 			
 		}
 
-		printf("as%d\n",suma);
+		if(suma==0){
 		
+			printf("Pinches:No hemos cocinado ni un plato bien\n-----Avisando al Chef-----\n");
+
+			printf("Chef: No tengo platos cocinados\n-----Cerrando el programa-----\n");
+
+			kill(somelier,SIGTERM);
+			kill(jefeDeSala,SIGTERM);
+			for(int i=0; i<posicion;i++){
+			kill(pinches[i],SIGTERM);
+			}
+
+		}else{
+
+			printf("Pinches: Hemos cocinado bien al menos un plato\n-----Avisando al Chef-----\n");
+
+			printf("Chef: Tengo al menos un plato bien cocinado\n---Avisando al jefe de sala de que monte las mesas---\n");
+
+			kill(jefeDeSala,SIGUSR1);
+	
+		}
+
+		int mesa;
+		int variable3=0;
+
+		waitpid(jefeDeSala,&mesa,0);
+
+		variable3=WEXITSTATUS(mesa);
+
+		if(variable3==0){
+
+			printf("Chef: PUEDE ABRIRSE EL RESTAURANTE\n-----Cerrando el programa-----\n");
+
+			kill(somelier,SIGTERM);
+			kill(jefeDeSala,SIGTERM);
+
+			for(int i=0; i<posicion;i++){
+			kill(pinches[i],SIGTERM);
+
+			}
+		}
 	}
 		
 }
@@ -189,13 +239,10 @@ void manejadoraSomelier(int signal){
 		
 	}else{ //codigo del somelier
 
-		kill(mozo,SIGTERM);
 
 		if(signal==SIGUSR1){
 
-			printf("Somelier: Faltan ingredientes\n");
-
-			sleep(1);
+			printf("Somelier: Faltan ingredientes\n-----Avisando al mozo-----\n");
 
 			kill(mozo,SIGPIPE);
 			
@@ -203,40 +250,38 @@ void manejadoraSomelier(int signal){
 
 		}else if(signal==SIGUSR2){
 
-			printf("Somelier: Falta vino\n");
-
-				sleep(1);
+			printf("Somelier: Falta vino\n-----Avisando al mozo-----\n");
 
 			kill(mozo,SIGPIPE);
 
 		}
 
+		kill(mozo,SIGTERM);
+
 	int encontrado;
-	int variable;
-		wait(&encontrado); 
-		
-		variable=WEXITSTATUS(encontrado);
+	int variable1;
 
-		printf("%d\n",variable);
+		wait(&encontrado); 		
+		variable1=WEXITSTATUS(encontrado);
 
-		if(encontrado == 0){
+		if(variable1 == 0){
 	
 			if(signal == SIGUSR1){
 
-				printf("Somelier: Faltan ingredientes\n");
+				printf("Somelier: Faltan ingredientes\n-----Avisando al Chef-----\n");
 
 				exit(2);
 
 			}else if(signal == SIGUSR2){
 
-				printf("Somelier: Falta vino\n");
+				printf("Somelier: Falta vino\n-----Avisando al Chef-----\n");
 	
 				exit(1);
 			}
 
 		}else{
 
-			printf("Somelier: No falta nada\n");
+			printf("Somelier: No falta nada\n-----Avisando al Chef-----\n");
 
 			exit(3);
 		}
@@ -251,12 +296,12 @@ void manejadoraMozo(int signal){
 
 	if(calculaAleatorios(0,1)==0){
 
-		printf("Mozo: No he encontrado lo que me pediste\n");
+		printf("Mozo: No he encontrado lo que me pediste\n-----Avisando al somelier-----\n");
 
 		exit(0);	
 	}else{
 
-		printf("Mozo: He encontrado lo que me pediste\n");
+		printf("Mozo: He encontrado lo que me pediste\n-----Avisando al somelier-----\n");
 
 		exit(1);
 
@@ -272,9 +317,19 @@ void manejadoraPinche(int signal){
 
 	int devuelto = calculaAleatorios(0,1);
 
-	printf("%d\n",devuelto);
-
 	exit(devuelto);
+
+}
+
+void manejadoraJefeDeSala(int signal){
+
+	printf("Jefe de sala: Montando las mesas\n");
+
+	sleep(3);
+
+	printf("Jefe de sala: Mesas montadas\n-----Avisando al Chef-----\n");
+
+	exit(0);
 
 }
 
