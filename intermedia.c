@@ -119,9 +119,13 @@ int main(int argc, char *argv[]){
 		if(variable==1){
 
 			printf("Chef: Falta vino no puedo abrir el restaurante\n");
-
 			
 			//aqui tengo que matar a todos los hijos
+
+			kill(somelier,SIGTERM);
+			kill(jefeDeSala,SIGTERM);
+			kill(pinches,SIGTERM);
+			kill(mozo,SIGTERM);
 	
 		}else if(variable==2){
 
@@ -140,6 +144,21 @@ int main(int argc, char *argv[]){
 			}
 		}
 
+		int devuelto;
+		int suma=0;
+	
+		for(int i=0; i<posicion;i++){
+			
+			waitpid(pinches[i],&devuelto,0);
+
+		
+			suma = suma + WEXITSTATUS(devuelto);
+
+			printf("%d\n",suma);
+			
+		}
+
+		printf("as%d\n",suma);
 		
 	}
 		
@@ -164,14 +183,17 @@ void manejadoraSomelier(int signal){
 
 		
 
-		sigaction(SIGPIPE, &sMozo, NULL);		
+		sigaction(SIGPIPE, &sMozo, NULL);
+		
 	
 		
 	}else{ //codigo del somelier
 
+		kill(mozo,SIGTERM);
+
 		if(signal==SIGUSR1){
 
-			printf("Faltan ingredientes\n");
+			printf("Somelier: Faltan ingredientes\n");
 
 			sleep(1);
 
@@ -181,7 +203,7 @@ void manejadoraSomelier(int signal){
 
 		}else if(signal==SIGUSR2){
 
-			printf("Falta vino\n");
+			printf("Somelier: Falta vino\n");
 
 				sleep(1);
 
@@ -214,7 +236,7 @@ void manejadoraSomelier(int signal){
 
 		}else{
 
-			printf("No falta nada\n");
+			printf("Somelier: No falta nada\n");
 
 			exit(3);
 		}
@@ -229,12 +251,12 @@ void manejadoraMozo(int signal){
 
 	if(calculaAleatorios(0,1)==0){
 
-		printf("No he encontrado lo que me pediste\n");
+		printf("Mozo: No he encontrado lo que me pediste\n");
 
 		exit(0);	
 	}else{
 
-		printf("He encontrado lo que me pediste\n");
+		printf("Mozo: He encontrado lo que me pediste\n");
 
 		exit(1);
 
@@ -244,9 +266,15 @@ void manejadoraMozo(int signal){
 
 void manejadoraPinche(int signal){
 
-	int suma = calculaAleatorios(0,1);
+	srand(getpid());
 
-	printf("%d\n",suma);
+	sleep(calculaAleatorios(2,5));
+
+	int devuelto = calculaAleatorios(0,1);
+
+	printf("%d\n",devuelto);
+
+	exit(devuelto);
 
 }
 
