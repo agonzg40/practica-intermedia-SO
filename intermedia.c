@@ -19,8 +19,8 @@ int main(int argc, char *argv[]){
 
 	int encontrado;
 
-	struct sigaction somelier1={0};
-	struct sigaction mPinches={0};
+	struct sigaction somelier1;
+	struct sigaction mPinches;
 	struct sigaction mJefeDeSala;
 
 	srand (time(NULL));
@@ -176,7 +176,7 @@ int main(int argc, char *argv[]){
 			printf("Chef: No tengo platos cocinados\n-----Cerrando el programa-----\n");
 
 			kill(somelier,SIGTERM);
-			kill(jefeDeSala,SIGTERM);
+			
 			for(int i=0; i<posicion;i++){
 			kill(pinches[i],SIGTERM);
 			}
@@ -268,20 +268,20 @@ void manejadoraSomelier(int signal){
 	
 			if(signal == SIGUSR1){
 
-				printf("Somelier: Faltan ingredientes\n-----Avisando al Chef-----\n");
+				printf("Somelier: Los mozos no han encontrado los ingredientes\n-----Avisando al Chef-----\n");
 
 				exit(2);
 
 			}else if(signal == SIGUSR2){
 
-				printf("Somelier: Falta vino\n-----Avisando al Chef-----\n");
+				printf("Somelier: Los mozos no han encontrado el vino\n-----Avisando al Chef-----\n");
 	
 				exit(1);
 			}
 
 		}else{
 
-			printf("Somelier: No falta nada\n-----Avisando al Chef-----\n");
+			printf("Somelier: Los mozos han encontrado lo necesario\n-----Avisando al Chef-----\n");
 
 			exit(3);
 		}
