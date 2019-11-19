@@ -19,9 +19,9 @@ int main(int argc, char *argv[]){
 
 	int encontrado;
 
-	struct sigaction somelier1;
-	struct sigaction mPinches;
-	struct sigaction mJefeDeSala;
+	struct sigaction somelier1={0};
+	struct sigaction mPinches={0};
+	struct sigaction mJefeDeSala={0};
 
 	srand (time(NULL));
 
@@ -122,6 +122,7 @@ int main(int argc, char *argv[]){
 			printf("Chef: Falta vino\n-----Avisando al somelier-----\n");
 
 			kill(somelier, SIGUSR2);
+			
 
 		}
 	
@@ -129,7 +130,7 @@ int main(int argc, char *argv[]){
 		int variable;
 
 		waitpid(somelier,&encontrado,0);
-		if(WIFEXITED(encontrado))
+		
 		variable =WEXITSTATUS(encontrado);
 
 		if(variable==1){
@@ -138,8 +139,13 @@ int main(int argc, char *argv[]){
 			
 			//aqui tengo que matar a todos los hijos
 
+			
 			kill(somelier,SIGTERM);
 			kill(jefeDeSala,SIGTERM);
+			for(int i=0;i<posicion;i++){
+				kill(pinches[i],SIGTERM);
+			}
+			kill(chef,SIGTERM);
 		
 	
 		}else if(variable==2){
@@ -166,6 +172,17 @@ int main(int argc, char *argv[]){
 			
 			waitpid(pinches[i],&devuelto,0);
 			suma = suma + WEXITSTATUS(devuelto);
+			int variable4= WEXITSTATUS(devuelto);
+
+			if(variable4==0){
+	
+				printf("Soy el pinche %d, y el plato lo he preparado mal\n",i);
+
+			}else{
+
+				printf("Soy el pinche %d, y el plato lo he preparado bien\n",i);
+
+			}
 			
 		}
 
@@ -180,6 +197,8 @@ int main(int argc, char *argv[]){
 			for(int i=0; i<posicion;i++){
 			kill(pinches[i],SIGTERM);
 			}
+			
+			kill(chef,SIGTERM);
 
 		}else{
 
@@ -192,13 +211,13 @@ int main(int argc, char *argv[]){
 		}
 
 		int mesa;
-		int variable3=0;
+		int variable3;
 
 		waitpid(jefeDeSala,&mesa,0);
 
 		variable3=WEXITSTATUS(mesa);
 
-		if(variable3==0){
+		if(variable3==1){
 
 			printf("Chef: PUEDE ABRIRSE EL RESTAURANTE\n-----Cerrando el programa-----\n");
 
@@ -209,6 +228,7 @@ int main(int argc, char *argv[]){
 			kill(pinches[i],SIGTERM);
 
 			}
+			kill(chef,SIGTERM);
 		}
 	}
 		
@@ -329,7 +349,7 @@ void manejadoraJefeDeSala(int signal){
 
 	printf("Jefe de sala: Mesas montadas\n-----Avisando al Chef-----\n");
 
-	exit(0);
+	exit(1);
 
 }
 
