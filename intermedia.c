@@ -17,11 +17,11 @@ void manejadoraJefeDeSala(int sig);//Manejadora del jefe de sala
 
 int main(int argc, char *argv[]){
 
-	int encontrado;
+	
 
-	struct sigaction somelier1={0};
-	struct sigaction mPinches={0};
-	struct sigaction mJefeDeSala={0};
+	struct sigaction somelier1;
+	struct sigaction mPinches;
+	struct sigaction mJefeDeSala;
 
 	srand (time(NULL));
 
@@ -30,8 +30,6 @@ int main(int argc, char *argv[]){
 	int posicion = atoi(argv[1]);
 
 	pid_t chef, somelier, jefeDeSala, pinches[posicion];
-
-	chef = getpid();
 
 	somelier = fork();
 
@@ -48,10 +46,6 @@ int main(int argc, char *argv[]){
 		sigaction(SIGUSR2, &somelier1, NULL);
 
 		for(;;) pause();
-		
-		//kill(somelier,SIGTERM);
-		
-
 	}
 
 	jefeDeSala = fork();
@@ -68,8 +62,6 @@ int main(int argc, char *argv[]){
 
 		for(;;) pause();
 
-		//kill(jefeDeSala,SIGTERM);
-
 	}
 
 	
@@ -77,8 +69,6 @@ int main(int argc, char *argv[]){
 	for(int i=0; i<posicion;i++){//creacion de tantos pinches como se diga
 
 		pinches[i]=fork();
-
-		int suma=0;
 
 		if(pinches[i]==-1){
 
@@ -91,14 +81,8 @@ int main(int argc, char *argv[]){
 			sigaction(SIGUSR1, &mPinches, NULL);
 
 			for(;;) pause();
-
-
-			//kill(pinches[i],SIGTERM);
 			
 		}	
-
-		
-
 	}
 
 	
@@ -106,99 +90,93 @@ int main(int argc, char *argv[]){
 	srand(getpid());
 
 
-	if(chef==getpid()){//codigo del chef
+	//codigo del chef
 
-		sleep(3);
+	sleep(3);
 
 		
-		if(calculaAleatorios(0, 1) == 0){
+	if(calculaAleatorios(0, 1) == 0){
 
-			printf("Chef: Faltan ingredientes\n-----Avisando al somelier-----\n");
+		printf("Chef: Faltan ingredientes\n-----Avisando al somelier-----\n");
 
-			kill(somelier, SIGUSR1);
+		kill(somelier, SIGUSR1);
+
+	}else{
+
+		printf("Chef: Falta vino\n-----Avisando al somelier-----\n");
+
+		kill(somelier, SIGUSR2);
+			
+
+	}
+	
+	int encontrado;
+	int variable;
+
+	wait(&encontrado);
+		
+	variable =WEXITSTATUS(encontrado);
+
+	if(variable==1){
+
+		printf("Chef: Falta vino no puedo abrir el restaurante\n-----Cerrando el restaurante-----\n");
+
+		kill(somelier,SIGTERM);
+		kill(jefeDeSala,SIGTERM);
+		for(int i=0;i<posicion;i++){
+			kill(pinches[i],SIGKILL);
+		}
+		
+	}else if(variable==2){
+
+		printf("Chef: Me faltan ingredientes\n-----Avisando a los pinches-----\n");
+		
+		for(int i=0; i<posicion; i++){
+			kill(pinches[i],SIGUSR1);
+		}
+	}else{
+
+		printf("Chef: No falta nada\n-----Avisando a los pinches-----\n");
+
+		for(int i=0; i<posicion; i++){
+
+			kill(pinches[i],SIGUSR1);
+		}
+	}
+
+	int devuelto;
+	int suma=0;
+	
+	for(int i=0; i<posicion;i++){
+			
+		wait(&devuelto);
+		suma = suma + WEXITSTATUS(devuelto);
+		int variable4= WEXITSTATUS(devuelto);
+
+		if(variable4==0){
+	
+			printf("Soy el pinche %d, y el plato lo he preparado mal\n",i);
 
 		}else{
 
-			printf("Chef: Falta vino\n-----Avisando al somelier-----\n");
-
-			kill(somelier, SIGUSR2);
-			
+			printf("Soy el pinche %d, y el plato lo he preparado bien\n",i);
 
 		}
-	
-		int encontrado;
-		int variable;
-
-		waitpid(somelier,&encontrado,0);
-		
-		variable =WEXITSTATUS(encontrado);
-
-		if(variable==1){
-
-			printf("Chef: Falta vino no puedo abrir el restaurante\n-----Cerrando el restaurante-----\n");
 			
-			//aqui tengo que matar a todos los hijos
+	}
 
+	if(suma==0){
+		
+		printf("Pinches:No hemos cocinado ni un plato bien\n-----Avisando al Chef-----\n");
+
+		printf("Chef: No tengo platos cocinados\n-----Cerrando el programa-----\n");
+
+		kill(somelier,SIGTERM);
 			
-			kill(somelier,SIGTERM);
-			kill(jefeDeSala,SIGTERM);
-			for(int i=0;i<posicion;i++){
-				kill(pinches[i],SIGTERM);
-			}
-			kill(chef,SIGTERM);
-		
-	
-		}else if(variable==2){
-
-			printf("Chef: Me faltan ingredientes\n-----Avisando a los pinches-----\n");
-		
-			for(int i=0; i<posicion; i++){
-				kill(pinches[i],SIGUSR1);
-			}
-		}else{
-
-			printf("Chef: No falta nada\n-----Avisando a los pinches-----\n");
-
-			for(int i=0; i<posicion; i++){
-
-				kill(pinches[i],SIGUSR1);
-			}
-		}
-
-		int devuelto;
-		int suma=0;
-	
 		for(int i=0; i<posicion;i++){
-			
-			waitpid(pinches[i],&devuelto,0);
-			suma = suma + WEXITSTATUS(devuelto);
-			int variable4= WEXITSTATUS(devuelto);
-
-			if(variable4==0){
-	
-				printf("Soy el pinche %d, y el plato lo he preparado mal\n",i);
-
-			}else{
-
-				printf("Soy el pinche %d, y el plato lo he preparado bien\n",i);
-
-			}
-			
-		}
-
-		if(suma==0){
-		
-			printf("Pinches:No hemos cocinado ni un plato bien\n-----Avisando al Chef-----\n");
-
-			printf("Chef: No tengo platos cocinados\n-----Cerrando el programa-----\n");
-
-			kill(somelier,SIGTERM);
-			
-			for(int i=0; i<posicion;i++){
 			kill(pinches[i],SIGTERM);
-			}
-			
-			kill(chef,SIGTERM);
+		}
+		kill(jefeDeSala,SIGTERM);
 
 		}else{
 
@@ -213,7 +191,7 @@ int main(int argc, char *argv[]){
 		int mesa;
 		int variable3;
 
-		waitpid(jefeDeSala,&mesa,0);
+		wait(&mesa);
 
 		variable3=WEXITSTATUS(mesa);
 
@@ -228,9 +206,8 @@ int main(int argc, char *argv[]){
 			kill(pinches[i],SIGTERM);
 
 			}
-			kill(chef,SIGTERM);
 		}
-	}
+	
 		
 }
 
@@ -242,7 +219,7 @@ void manejadoraSomelier(int signal){
 
 	mozo = fork();
 
-	struct sigaction sMozo = {0};
+	struct sigaction sMozo;
 	sMozo.sa_handler=manejadoraMozo;
 
 	if(mozo==-1){
@@ -250,8 +227,6 @@ void manejadoraSomelier(int signal){
 		perror("error en la llamada al fork()");
 
 	}else if(mozo == 0){ // codigo del mozo
-
-		
 
 		sigaction(SIGPIPE, &sMozo, NULL);
 		
@@ -265,14 +240,12 @@ void manejadoraSomelier(int signal){
 			printf("Somelier: Faltan ingredientes\n-----Avisando al mozo-----\n");
 
 			kill(mozo,SIGPIPE);
-			
-			
 
 		}else if(signal==SIGUSR2){
 
 			printf("Somelier: Falta vino\n-----Avisando al mozo-----\n");
 
-			kill(mozo,SIGPIPE);
+			kill(mozo,SIGPIPE);			
 
 		}
 
@@ -280,11 +253,11 @@ void manejadoraSomelier(int signal){
 
 	int encontrado;
 	int variable1;
-
+		
 		wait(&encontrado); 		
 		variable1=WEXITSTATUS(encontrado);
 
-		if(variable1 == 0){
+		if(variable1 == 0){ //Miro a ver lo que han encontrado los mozos
 	
 			if(signal == SIGUSR1){
 
@@ -311,6 +284,8 @@ void manejadoraSomelier(int signal){
 }
 
 void manejadoraMozo(int signal){
+
+	printf("hola\n");
 
 	srand(getpid());
 
