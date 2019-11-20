@@ -17,8 +17,6 @@ void manejadoraJefeDeSala(int sig);//Manejadora del jefe de sala
 
 int main(int argc, char *argv[]){
 
-	
-
 	struct sigaction somelier1;
 	struct sigaction mPinches;
 	struct sigaction mJefeDeSala;
@@ -75,7 +73,7 @@ int main(int argc, char *argv[]){
 			perror("Error en la llamada al fork()");
 
 		}else if(pinches[i]==0){//codigo del pinche
-			
+	
 			mPinches.sa_handler = manejadoraPinche;
 
 			sigaction(SIGUSR1, &mPinches, NULL);
@@ -121,10 +119,10 @@ int main(int argc, char *argv[]){
 
 		printf("Chef: Falta vino no puedo abrir el restaurante\n-----Cerrando el restaurante-----\n");
 
-		kill(somelier,SIGTERM);
+		
 		kill(jefeDeSala,SIGTERM);
 		for(int i=0;i<posicion;i++){
-			kill(pinches[i],SIGKILL);
+			kill(pinches[i],SIGTERM);
 		}
 		
 	}else if(variable==2){
@@ -214,6 +212,7 @@ int main(int argc, char *argv[]){
 void manejadoraSomelier(int signal){
 	
 	int encontrado;
+	int variable1;
 
 	pid_t mozo;
 
@@ -230,7 +229,7 @@ void manejadoraSomelier(int signal){
 
 		sigaction(SIGPIPE, &sMozo, NULL);
 		
-	
+		for(;;) pause();
 		
 	}else{ //codigo del somelier
 
@@ -239,22 +238,21 @@ void manejadoraSomelier(int signal){
 
 			printf("Somelier: Faltan ingredientes\n-----Avisando al mozo-----\n");
 
-			kill(mozo,SIGPIPE);
-
 		}else if(signal==SIGUSR2){
 
-			printf("Somelier: Falta vino\n-----Avisando al mozo-----\n");
-
-			kill(mozo,SIGPIPE);			
+			printf("Somelier: Falta vino\n-----Avisando al mozo-----\n");			
 
 		}
 
-		kill(mozo,SIGTERM);
+		sleep(2);		
 
-	int encontrado;
-	int variable1;
+		kill(mozo,SIGPIPE);
+
 		
-		wait(&encontrado); 		
+
+		
+		
+		waitpid(mozo,&encontrado,0); 		
 		variable1=WEXITSTATUS(encontrado);
 
 		if(variable1 == 0){ //Miro a ver lo que han encontrado los mozos
@@ -278,15 +276,15 @@ void manejadoraSomelier(int signal){
 
 			exit(3);
 		}
+		
+		
 
 	}
 
 }
 
 void manejadoraMozo(int signal){
-
-	printf("hola\n");
-
+	
 	srand(getpid());
 
 	if(calculaAleatorios(0,1)==0){
